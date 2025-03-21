@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <functional>
 #include <concepts>
 #include <initializer_list>
@@ -27,11 +28,11 @@ class JumpTable {
         //    }
         //}
 
-        // Explicit integral index constructor
-        JumpTable(std::initializer_list<std::pair<const K, T>> init_list) {
+        // Explicit index constructor
+        explicit JumpTable(std::initializer_list<std::pair<const K, T>> init_list) {
             if constexpr (IsInteger<K>) {
-                size_t last_index = std::size_t(std::ssize(*std::prev(init_list.end())));
-                container.resize(last_index, nullptr);
+                size_t last_index = std::size_t((*std::prev(init_list.end())).first);
+                container.resize(last_index + 1, nullptr);
                 for (const auto& [index, value] : init_list) {
                     container.at(index) = value;
                 }
@@ -68,9 +69,13 @@ class JumpTable {
         std::vector<K> GetAllKeys() {
             std::vector<K> keys;
             if constexpr (IsInteger<K>) {
-                for (K key : std::ranges::iota_view(0, container.size())) {
-                    keys.push_back(key);
-                }
+                K size = static_cast<K>(container.size());
+                std::copy(
+                    std::views::iota(static_cast<K>(0), size).begin(), 
+                    std::views::iota(static_cast<K>(0), size).end(), 
+                    std::back_inserter(keys)
+                );
+
             } else {
                 for (const auto& key : std::views::keys(container)) {
                     keys.push_back(key);
@@ -93,5 +98,5 @@ class JumpTable {
 
 // Deduction guide 
 template <typename K, FunctionType T>
-JumpTable(std::initializer_list<std::pair<const K, T>> init_list) -> JumpTable<K, T>;
+explicit JumpTable(std::initializer_list<std::pair<const K, T>> init_list) -> JumpTable<K, T>;
 

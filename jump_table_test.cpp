@@ -29,7 +29,13 @@ int PrintBackward(ByteSpan_t bytes);
 int SumAll(ByteSpan_t bytes);
 
 
-
+/*K size = static_cast<K>(container.size());
+                std::copy(
+                    std::views::iota(static_cast<K>(0), size).begin(), 
+                    std::views::iota(static_cast<K>(0), size).end(), 
+                    std::back_inserter(keys)
+                );
+*/
 
 
 JumpTable<int, DataParser_t> IntParsers{{
@@ -73,15 +79,12 @@ int main()
         stringParsers
     };
 
-    for (auto& pt_v : parserTests) {
-        auto all_keys = std::visit([](const auto& pt) -> KeysVariant { return pt.GetAllKeys(); }, pt_v);
-        for (auto& key : all_keys) {
-            if (pt[key] == nullptr) {
-                std::cout << "No function assigned to key " <<  key << std::endl;
-            } else {
-                pt[key](test_data);
-            }
-        } 
+    for (auto& key : IntParsers.GetAllKeys()) { 
+        if (IntParsers[key] != nullptr) {
+            IntParsers[key](test_data);
+        } else {
+            std::cout << "No function for key " << key << std::endl;
+        }
     }
 
     return 0;
