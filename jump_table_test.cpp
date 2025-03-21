@@ -59,6 +59,22 @@ JumpTable<std::string, DataParser_t> stringParsers{{
 }};
 
 
+
+template<typename K, FunctionType T>
+void JumpTableTester(JumpTable<K, T> jump, std::string name)
+{
+    std::cout << name << std::endl;
+    for (K& key : jump.GetAllKeys()) { 
+        std::cout << key << ": ";
+        if (IntParsers[key] != nullptr) {
+            IntParsers[key](test_data);
+        } else {
+            std::cout << "No function" << std::endl;
+        }
+    }
+}
+
+
 int main()
 {
     using ParserTableVariant = std::variant<
@@ -79,13 +95,30 @@ int main()
         stringParsers
     };
 
+    std::cout << "Int keys..." << std::endl;
     for (auto& key : IntParsers.GetAllKeys()) { 
+        std::cout << key << ": ";
         if (IntParsers[key] != nullptr) {
             IntParsers[key](test_data);
         } else {
-            std::cout << "No function for key " << key << std::endl;
+            std::cout << "No function" << std::endl;
         }
     }
+
+
+    std::cout << std::endl << "String keys..." << std::endl;
+    for (auto& key : stringParsers.GetAllKeys()) { 
+        std::cout << key << ": ";
+        if (stringParsers[key] != nullptr) {
+            stringParsers[key](test_data);
+        } else {
+            std::cout << "No function" << std::endl;
+        }
+    }
+
+    // stringParsers["flarg;e"](test_data);
+    //stringParsers["asf"](test_data);
+    IntParsers[7](test_data);
 
     return 0;
 }

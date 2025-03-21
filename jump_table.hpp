@@ -43,28 +43,37 @@ class JumpTable {
             }
         }
         
+         
+        // throws std::out_of_range on bad key
+        // Returns function on good key
+        T operator[](const K& key) {     
+            try {
+                return container[key];
+            } catch (const std::out_of_range& f) {
+                return nullptr;
+            }
+        }
 
-        // Non-integral key constructor
-       // JumpTable(std::initializer_list<std::pair<const T, K>> init_list) requires (!IsInteger<T>) {
-       //     for (const auto& [key, value] : init_list) {
-       //         container.emplace(key, value);
-       //     }
-       // }
-
-        //JumpTable(std::initializer_list<std::pair<const T, K>> init_list) = default;
-
-        // Random access operator overload
-        auto& operator[](const K& key) {
+        // Returns nullptr on bad key
+        // Returns function on good key
+        T& at(const K& key) { 
             if constexpr (IsInteger<K>) {
-                if (key >= 0 && static_cast<size_t>(key) < container.size()) {
+                if (key >= 0 && static_cast<size_t>(key) < container.size() && container[key]) {
                     return container[key];
                 } else {
-                    throw std::out_of_range("Index out of bounds");
+                    throw std::out_of_range("Invalid key");
                 }
             } else {
                 return container.at(key);
             }
         }
+
+        auto Size() {
+            return container.size();
+        }
+
+
+
         
         std::vector<K> GetAllKeys() {
             std::vector<K> keys;
