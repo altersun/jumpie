@@ -1,8 +1,6 @@
 #include <stdio.h>
 
-#define JUMP_TABLE(name, type, ...) \
-    type name[] = {__VA_ARGS__}
-
+#include "jump_table.h"
 
 // Example function pointer type
 typedef int (*func_ptr)(int);
@@ -22,8 +20,6 @@ int main() {
      for (int i = 0; i < count; i++) {
         printf("Func %d result: %d\n", i, funcs[i](base));
     }
-
-
 
     return 0;
 }
