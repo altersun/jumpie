@@ -1,15 +1,26 @@
 #ifndef JUMP_TABLE_H
 #define JUMP_TABLE_H
 
+#define JUMP_TABLE_COUNT(table) \
+    (sizeof(table)/sizeof(table[0]))
+
 #define JUMP_TABLE(name, type, ...) \
     type name[] = {__VA_ARGS__}
+
+#define MULTIJUMP_TABLE(name, type, size, ...) \
+    type name[][size] = {__VA_ARGS__}
+
+#define FIRST_ENTRY(f, ...) f
+#define MULTIJUMP_TABLE_EZ(name, type, ...) \
+    const type name##sizer =   
+    const size_t name##size = JUMP_TABLE_COUNT(__VA_ARGS__); \
+    type name[][name##size] = {__VA_ARGS__}
 
 #define JUMP_MENU(name, type, ...) \
     typedef struct {type func; const char *desc;} name##_menu_t; \
     name##_menu_t name[] = {__VA_ARGS__}
 
-#define JUMPTABLE_COUNT(table) \
-    (sizeof(table)/sizeof(table[0]))
+
 
 #define JUMP_MENU_PRINT(menu, print_func) \
     for (int index = 0; index < JUMPTABLE_COUNT(menu); index++) { \
