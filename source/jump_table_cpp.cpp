@@ -7,7 +7,7 @@
 #include <variant>
 #include <vector>
 
-#include "./jump_table.hpp"
+#include <jump_table.hpp>
 
 using ByteSpan_t = std::vector<std::byte>;
 using DataParser_t = std::function<int(ByteSpan_t)>;
@@ -36,6 +36,12 @@ int SumAll(ByteSpan_t bytes);
                     std::back_inserter(keys)
                 );
 */
+
+JumpTable<int, DataParser_t> ImpIntParsers{{
+    PrintForward,
+    PrintBackward,
+    SumAll
+}};
 
 
 JumpTable<int, DataParser_t> IntParsers{{
@@ -105,7 +111,6 @@ int main()
         }
     }
 
-
     std::cout << std::endl << "String keys..." << std::endl;
     for (auto& key : stringParsers.GetAllKeys()) { 
         std::cout << key << ": ";
@@ -116,12 +121,19 @@ int main()
         }
     }
 
-    // stringParsers["flarg;e"](test_data);
-    //stringParsers["asf"](test_data);
-    IntParsers[7](test_data);
+    std::cout << "Int keys..." << std::endl;
+    for (auto& key : ImpIntParsers.GetAllKeys()) { 
+        std::cout << key << ": ";
+        if (IntParsers[key] != nullptr) {
+            IntParsers[key](test_data);
+        } else {
+            std::cout << "No function" << std::endl;
+        }
+    }
 
     return 0;
 }
+
 
 
 int PrintForward(ByteSpan_t bytes)

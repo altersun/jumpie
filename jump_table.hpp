@@ -22,11 +22,11 @@ class JumpTable {
         using Container_t = std::conditional_t<IsInteger<K>, std::vector<T>, std::unordered_map<K, T>>;
 
         // Implicit integral index constructor
-        //JumpTable(std::initializer_list<T> init_list) requires IsInteger<T> {
-        //    for (const auto& value : init_list) {
-        //        container.push_back(value);
-        //    }
-        //}
+        JumpTable(std::initializer_list<T> init_list) requires IsInteger<T> {
+            for (const auto& value : init_list) {
+                container.push_back(value);
+            }
+        }
 
         // Explicit index constructor
         explicit JumpTable(std::initializer_list<std::pair<const K, T>> init_list) {

@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "jump_table.h"
+#include <jump_table.h>
 
 // Example function pointer type
 typedef int (*func_ptr)(int);

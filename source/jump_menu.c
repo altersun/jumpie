@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "jump_table.h"
+#include <jump_table.h>
 
 
 // Function type and examples

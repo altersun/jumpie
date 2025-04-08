@@ -1,31 +1,22 @@
 BUILD_DIR := $(shell pwd)/build
-EXE := "$(BUILD_DIR)/ringbuf.exe"
-OBJS = $(patsubst ./source/%.c,./build/%.o,$(wildcard ./source/*.c))
-OBJS += $(patsubst ./source/%.cpp,./build/%.opp,$(wildcard ./source/*.cpp))
+C_EXES = $(patsubst ./source/%.c,./build/%.exe,$(wildcard ./source/*.c))
+CXX_EXES += $(patsubst ./source/%.cpp,./build/%.exe,$(wildcard ./source/*.cpp))
 INCLUDE := $(shell pwd)/include
 
 .PHONY: all clean
-all: $(EXE)
-
-run: $(EXE)
-	@$(EXE)
-
-$(EXE): $(OBJS)
-	@echo 'Linking source file(s) $(OBJS) together into $@...'
-	@$(CXX) -o "$@" $(OBJS) -Wl,-rpath,`realpath $(BUILD_DIR)`
-	@echo "Built $@"
+all: $(C_EXES) $(CXX_EXES)
 
 # Build cpp
-./build/%.opp: ./source/%.cpp ./build
+./build/%.exe: ./source/%.cpp ./build
 	@echo 'Building source file $<...'
-	@$(CXX) --std=c++2a -I $(INCLUDE) -fconcepts -g -c -o "$@" "$<" 
+	@$(CXX) --std=c++2a -I./ -fconcepts -g -o "$@" "$<" 
 	@echo 'Built $@'
 	@echo
 
 # Build c
-./build/%.o: ./source/%.c ./build
+./build/%.exe: ./source/%.c ./build
 	@echo 'Building source file $<...'
-	@$(CC) -std=gnu17 -I $(INCLUDE) -g -c -o "$@" "$<"
+	@$(CC) -std=gnu17 -I./ -g -o "$@" "$<"
 	@echo 'Built $@'
 	@echo
 
