@@ -12,12 +12,12 @@ int negate(int x) { return -x; }
 
 int main() {
     JUMP_TABLE(funcs, func_ptr, add_one, square, negate);
-    size_t count = sizeof(funcs)/sizeof(funcs[0]);
+    size_t count = JUMP_TABLE_COUNT(funcs);
 
      // Test the array
      int base = 5;
      printf("Size: %ld. Using %d as a base...\n", count, base);
-     for (int i = 0; i < count; i++) {
+     for (int i = 0; i < (int)(count); i++) {
         printf("Func %d result: %d\n", i, funcs[i](base));
     }
 
