@@ -1,79 +1,84 @@
-#include <cstdint>
-#include <functional>
 #include <iomanip>
 #include <iostream>
-#include <ranges>
 #include <sstream>
 #include <variant>
 #include <vector>
 
 #include <jump_table.hpp>
 
+// Some aliases just for less typing later
 using ByteSpan_t = std::vector<std::byte>;
 using DataParser_t = std::function<int(ByteSpan_t)>;
 using IntParserTable_t = JumpTable<int, DataParser_t>;
 using FloatParserTable_t = JumpTable<float, DataParser_t>;
 using StringParserTable_t = JumpTable<std::string, DataParser_t>;
 
+// These two aliases allow for looping over jump tables
+// with the same test function for each of them
+using ParserTableVariant = std::variant<
+    IntParserTable_t,
+    FloatParserTable_t,
+    StringParserTable_t
+>;
+using NamedParserTableVariant = std::pair<
+    std::string,
+    ParserTableVariant
+>;
 
-
-
+// Our test data. Simulates an incoming bytestream like
+// one would frequently see in embedded systems (but shorter).
 static const ByteSpan_t test_data {
     std::byte{0xAA}, std::byte{0xFE}, std::byte{0x23},
     std::byte{0x4D}, std::byte{0x44}
 };
 
-
+// Our functions, which will take the above test data
 int PrintForward(ByteSpan_t bytes);
 int PrintBackward(ByteSpan_t bytes);
 int SumAll(ByteSpan_t bytes);
 
-
-/*K size = static_cast<K>(container.size());
-                std::copy(
-                    std::views::iota(static_cast<K>(0), size).begin(), 
-                    std::views::iota(static_cast<K>(0), size).end(), 
-                    std::back_inserter(keys)
-                );
-*/
-
-JumpTable<int, DataParser_t> ImpIntParsers{{
+// Keys are implicitly assumed to be contiguous integers
+// by the table constructor. Vector under the hood.
+IntParserTable_t ImpIntParsers{{
     PrintForward,
     PrintBackward,
     SumAll
 }};
 
-
-JumpTable<int, DataParser_t> IntParsers{{
+// Keys here are explicitly integral. Could be constant values, 
+// enums, chars, or any other integral type. Vector under the hood.
+IntParserTable_t ExpIntParsers{{
     {3, PrintForward},
     {5, PrintBackward},
     {8, SumAll}
 }};
 
-
-JumpTable<float, DataParser_t> floatParsers{{
+// Keys are floating point numbers. Don't know why anyone would want
+// this, but you *could* do it. Map under the hood.
+FloatParserTable_t FloatParsers{{
     {4.6, PrintForward},
     {5.66666, PrintBackward},
     {7890.2, SumAll}
 }};
 
-
-JumpTable<std::string, DataParser_t> stringParsers{{
+// Keys are strings. Map under the hood. A strong benefit over using a Map
+// directly is that the values *must* be functions or it won't compile.
+StringParserTable_t StringParsers{{
     {"forward", PrintForward},
     {"backward", PrintBackward},
     {"sum", SumAll}
 }};
 
-
-
+// Test runner. Executes all functions in the table. Templated
+// to work with all kinds of keys and function prototypes.
 template<typename K, FunctionType T>
 void JumpTableTester(JumpTable<K, T> jump, std::string name)
 {
     std::cout << name << std::endl;
     for (K& key : jump.GetAllKeys()) { 
         std::cout << key << ": ";
-        if (IntParsers[key] != nullptr) {
-            IntParsers[key](test_data);
+        if (jump[key] != nullptr) {
+            jump[key](test_data);
         } else {
             std::cout << "No function" << std::endl;
         }
@@ -83,59 +88,26 @@ void JumpTableTester(JumpTable<K, T> jump, std::string name)
 
 int main()
 {
-    using ParserTableVariant = std::variant<
-        IntParserTable_t,
-        FloatParserTable_t,
-        StringParserTable_t
-    >;
-
-    using KeysVariant = std::variant<
-        std::vector<int>,
-        std::vector<float>,
-        std::vector<std::string>
-    >;
-    
-    std::vector<ParserTableVariant> parserTests {
-        IntParsers,
-        floatParsers,
-        stringParsers
+    // Make a handy table to iterate over
+    std::vector<NamedParserTableVariant> parser_tables {
+        {"Implicit integral keys", ImpIntParsers},
+        {"Explicit integral keys", ExpIntParsers},
+        {"Float keys", FloatParsers},
+        {"String keys", StringParsers}
     };
 
-    std::cout << "Int keys..." << std::endl;
-    for (auto& key : IntParsers.GetAllKeys()) { 
-        std::cout << key << ": ";
-        if (IntParsers[key] != nullptr) {
-            IntParsers[key](test_data);
-        } else {
-            std::cout << "No function" << std::endl;
-        }
-    }
-
-    std::cout << std::endl << "String keys..." << std::endl;
-    for (auto& key : stringParsers.GetAllKeys()) { 
-        std::cout << key << ": ";
-        if (stringParsers[key] != nullptr) {
-            stringParsers[key](test_data);
-        } else {
-            std::cout << "No function" << std::endl;
-        }
-    }
-
-    std::cout << "Int keys..." << std::endl;
-    for (auto& key : ImpIntParsers.GetAllKeys()) { 
-        std::cout << key << ": ";
-        if (IntParsers[key] != nullptr) {
-            IntParsers[key](test_data);
-        } else {
-            std::cout << "No function" << std::endl;
-        }
+    // Do it!
+    for (const auto& [name, parser_table] : parser_tables) {
+        std::visit([&name](const auto& table) {
+            JumpTableTester(table, name);
+        }, parser_table);
+        std::cout << std::endl;
     }
 
     return 0;
 }
 
-
-
+// Simple function for testing
 int PrintForward(ByteSpan_t bytes)
 {
     std::ostringstream oss;
@@ -154,7 +126,7 @@ int PrintForward(ByteSpan_t bytes)
     return count;
 }
 
-
+// Simple function for testing
 int PrintBackward(ByteSpan_t bytes)
 {
     std::ostringstream oss;
@@ -173,13 +145,13 @@ int PrintBackward(ByteSpan_t bytes)
     return count;
 }
 
-
+// Simple function for testing
 int SumAll(ByteSpan_t bytes)
 {
     int sum = 0;
     for (const auto& b : bytes) {  
         sum += static_cast<int>(b);
     }
-    std::cout << "Sum: " << sum << std::endl;
+    std::cout << sum << std::endl;
     return sum;
 }
