@@ -39,7 +39,7 @@ class JumpTable {
             }
         }
         
-        // throws std::out_of_range on bad key
+        // Returns nullptr on bad key
         // Returns function on good key
         T operator[](const K& key) {     
             try {
@@ -49,7 +49,7 @@ class JumpTable {
             }
         }
 
-        // Returns nullptr on bad key
+        // throws std::out_of_range on bad key
         // Returns function on good key
         T& at(const K& key) { 
             if constexpr (IsInteger<K>) {
@@ -89,9 +89,3 @@ class JumpTable {
     private:
         Container_t container;
 };
-
-
-// Deduction guide 
-//template <typename K, FunctionType T>
-//explicit JumpTable(std::initializer_list<std::pair<const K, T>> init_list) -> JumpTable<K, T>;
-
